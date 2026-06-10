@@ -4,7 +4,7 @@
 // import heroImg from './assets/hero.png'
 import './App.css'
 import Header from './Header.tsx'
-import DotGame from './DotGame.tsx'
+import DotGame from './DotGame/DotGame.tsx'
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -15,7 +15,7 @@ function App() {
       <div className="container">
         {/* <div>Lala</div>
         <div> Nana</div> */}
-        <DotGame />
+        <DotGame botmode={false}/>
       </div>
       
     </div>

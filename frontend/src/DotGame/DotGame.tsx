@@ -1,5 +1,8 @@
 import './DotGame.css'
 import { useState } from 'react'
+import {RandomDotBot} from './DotBots'
+import updateUI from './updateUI';
+import checkBox from './checkbox';
 
 //m1: boxes with dots, needs rep for edges
 //m2: dots with div rep of edges, rectangular with width:1/2px and cross-height:~box-size
@@ -19,72 +22,7 @@ function Row ({len, ii}:{len:number, ii:number}){
 	)
 }
 
-function updateUI(vv:number,hori:boolean,player:string,boxxx:boolean,bi1:number,bi2?:number){
-  let s1 = `border-top: 2px solid green;`
-  let s2 = `border-left: 2px solid green;`
-  let s3 = s1+s2;
-  let s4 = `background-color: limegreen;`;
-
-  let boxx = document.querySelector(`#b${vv}`);	
-  //fix it!!
-  if(boxx?.getAttribute('style')){
-    boxx?.setAttribute('style', s3);
-    // return;
-  }
-  else if(hori) boxx?.setAttribute('style', s1);
-  else boxx?.setAttribute('style', s2);
-
-  if(boxxx){
-    boxx = document.querySelector(`#b${bi1}`);
-    boxx?.setAttribute('style',s4+s1+s2);
-    if(boxx) boxx.innerHTML += `${player}`;
-    boxx = document.querySelector(`#b${bi2}`);
-    boxx?.setAttribute('style',s4+s1+s2);
-    if(boxx) boxx.innerHTML += `${player}`;
-  }
-}
-
-function checkBox(vv:number,hori:boolean,len:number, hedge:Array<Array<number>>,vedge:Array<Array<number>>){
-  let r = Math.floor(vv/len), c=vv%len;
-
-  // console.log(vedge[r][c-1],hedge[r+1][c-1],hedge[r][c-1]);
-
-  if(hori){
-    let boxxx = 0;
-    if(r>0){
-      // boxxx = boxxx || (hedge[r-1][c]&&vedge[r-1][c]&&vedge[r-1][c+1]);
-      if(hedge[r-1][c]&&vedge[r-1][c]&&vedge[r-1][c+1]){
-        boxxx += 1;
-      }
-    } 
-    if(r<len){
-      // boxxx = boxxx || (hedge[r+1][c]&&vedge[r][c]&&vedge[r][c+1]);
-      if(hedge[r+1][c]&&vedge[r][c]&&vedge[r][c+1]){
-        boxxx += 2;
-      }
-    }
-    if(boxxx>0)console.log("Boxxxx!!!!");
-    return boxxx;
-  } else {
-    let boxxx = 0;
-    if(c>0){
-      // boxxx = boxxx || 
-      if(vedge[r][c-1]&&hedge[r][c-1]&&hedge[r+1][c-1]){
-        boxxx += 1;
-      }
-    } 
-    if(c<len){
-      // boxxx = boxxx || 
-      if(vedge[r][c+1]&&hedge[r][c]&&hedge[r+1][c]){
-        boxxx += 2;
-      }
-    }
-    if(boxxx)console.log("Boxxxx!!!!");
-    return boxxx;
-  }
-}
-
-export default function DotGame(){
+export default function DotGame({botmode}:{botmode:boolean}){
 	const [len, setLen] = useState(6);
 	const [bufDot, setBufDot] = useState(-1);
 	const [player, setPlayer] = useState('A');
@@ -110,18 +48,44 @@ export default function DotGame(){
 	function handleClick(e:any){
 		// add corner dots later
 		// add edge representation, check if left already exists then add left+top/ if top already exists then left+top, else single only
-		if(e.target.className==='dot'){
+		if(e.target.className==='dot' ||e.target.className==='dotr' || e.target.className==='dotb'){
 			if(bufDot===-1){
 				setBufDot(Number(e.target.id.slice(1)));
 			} else {
 				let p1 = Number(e.target.id.slice(1));
 				let p2 = bufDot, diff=p1-p2;
-        let bi1=-1,bi2=-1, boxx=0;
+        let bi1=-1,bi2=-1, boxx=0,vv;
 				// console.log(p2,p1,diff);
 				setBufDot(-1);
 
-				if(diff>0){ //p2 smaller      
-          let vv=p2 - Math.floor(p2/(len+1));
+        if((p1%(len+1)===len && p2%(len+1)===len && Math.abs(p1-p2)===len+1)){
+          let pt = Math.min(p1,p2);
+          vv = pt - 1 -Math.floor(pt/(len+1));
+          let s5 = `border-right: 2px solid green;`
+
+          let boxxx = document.querySelector(`#b${vv}`);
+          let bxs = boxxx?.getAttribute('style');
+          console.log(p2,p1, pt, vv);
+          if(bxs){
+            boxxx?.setAttribute('style',bxs+s5);
+          } else {
+            boxxx?.setAttribute('style',s5);
+          }
+          
+
+          arrv = [...vedge];
+          arrv[Math.floor(vv/len)][len]=1;
+          console.log(arrv);
+          setVedge(arrv);
+          
+          boxx = checkBox(Math.floor(vv/len)*(len+1),false,len,hedge,vedge);
+
+        } else if(Math.floor(p1/len+1)===len && Math.floor(p1/len+1)===len){
+
+        }
+
+				else if(diff>0){ //p2 smaller      
+          vv=p2 - Math.floor(p2/(len+1));
           boxx = checkBox(vv,diff===1,len,hedge,vedge);
         
 					if(diff===1){
@@ -200,8 +164,15 @@ export default function DotGame(){
 				}
 
         if(!boxx){
-          if(player=='A') setPlayer('N');
-          else setPlayer('A');
+          // if(botmode){
+          //   RandomDotBot({len,hedge,vedge, setHedge, setVedge});           
+          // }
+          if(player=='A'){
+            setPlayer('N');
+          } 
+          else {
+            setPlayer('A');
+          }
         }
 			}
 		}
